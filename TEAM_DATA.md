@@ -10,7 +10,7 @@
 
 ```json
 {
-  "teamName": "我們的星際小組",
+  "teamName": "昕力專案A組",
   "members": [
     { "id": "A", "fullName": "廖佩炘" },
     { "id": "B", "fullName": "黃允樂" },
@@ -19,8 +19,7 @@
   ],
   "closingMessage": [
     "歡迎你們加入專案",
-    "期待你們的創意!",
-    "(旁邊有一些需要看的東西喔~)"
+    "期待你們的創意!"
   ],
   "links": [
     { "id": "line", "label": "LINE", "icon": "line", "url": "" },

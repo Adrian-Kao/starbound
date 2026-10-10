@@ -33,8 +33,7 @@ export function LinkPanel({ links, onClose, onReset }: Props) {
       <aside className="link-panel" role="dialog" aria-modal="true" aria-labelledby="link-panel-title">
         <button className="panel-close" type="button" onClick={onClose} aria-label="關閉星圖選單">×</button>
         <span className="eyebrow">CONSTELLATION INDEX</span>
-        <h2 id="link-panel-title">繼續沿著星光前進</h2>
-        <p>這些座標由 TEAM_DATA.md 管理。</p>
+        <h2 id="link-panel-title">一些相關資料</h2>
         <nav aria-label="團隊與專案連結">
           {links.map((link) => link.url ? (
             <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer">

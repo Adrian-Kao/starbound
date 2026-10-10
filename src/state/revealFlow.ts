@@ -2,7 +2,7 @@ import type { TeamConfig, TeamMember } from '../config/teamTypes'
 import { findMemberByName, getOtherMembers } from '../config/parseTeamMarkdown'
 
 export type Scene = 'landing' | 'name-entry' | 'entering-lens' | 'telescope' | 'returning' | 'finale'
-export type RevealPhase = 'scattered' | 'forming' | 'completed' | 'dragging' | 'transitioning'
+export type RevealPhase = 'scattered' | 'priming' | 'forming' | 'completed' | 'resonating' | 'transitioning'
 
 export type AppState = {
   scene: Scene
@@ -31,10 +31,13 @@ export type FlowAction =
   | { type: 'CLOSE_NAME_ENTRY' }
   | { type: 'IDENTIFIED'; member: TeamMember; others: TeamMember[] }
   | { type: 'ENTER_TELESCOPE' }
-  | { type: 'SET_REVEAL_PROGRESS'; progress: number; forming: boolean }
+  | { type: 'PRIME_REVEAL' }
+  | { type: 'CANCEL_PRIME' }
+  | { type: 'START_FORMING' }
+  | { type: 'SET_REVEAL_PROGRESS'; progress: number }
   | { type: 'COMPLETE_REVEAL' }
-  | { type: 'START_DRAG' }
-  | { type: 'END_DRAG' }
+  | { type: 'START_RESONANCE' }
+  | { type: 'END_RESONANCE' }
   | { type: 'START_PAGE_TRANSITION' }
   | { type: 'NEXT_PAGE' }
   | { type: 'START_RETURN' }
@@ -60,10 +63,22 @@ export function revealReducer(state: AppState, action: FlowAction): AppState {
       return state.scene === 'entering-lens' && state.revealMembers.length === 3
         ? { ...state, scene: 'telescope' }
         : state
+    case 'PRIME_REVEAL':
+      return state.scene === 'telescope' && state.revealPhase === 'scattered'
+        ? { ...state, revealPhase: 'priming' }
+        : state
+    case 'CANCEL_PRIME':
+      return state.scene === 'telescope' && state.revealPhase === 'priming'
+        ? { ...state, revealPhase: 'scattered', revealProgress: 0 }
+        : state
+    case 'START_FORMING':
+      return state.scene === 'telescope' && (state.revealPhase === 'priming' || state.revealPhase === 'scattered')
+        ? { ...state, revealPhase: 'forming', revealProgress: 0 }
+        : state
     case 'SET_REVEAL_PROGRESS': {
-      if (state.scene !== 'telescope' || state.revealPhase === 'completed' || state.revealPhase === 'dragging') return state
+      if (state.scene !== 'telescope' || state.revealPhase !== 'forming') return state
       const progress = Math.min(0.999, Math.max(0, action.progress))
-      return { ...state, revealProgress: progress, revealPhase: action.forming && progress > 0 ? 'forming' : 'scattered' }
+      return { ...state, revealProgress: progress }
     }
     case 'COMPLETE_REVEAL': {
       if (state.scene !== 'telescope') return state
@@ -71,10 +86,10 @@ export function revealReducer(state: AppState, action: FlowAction): AppState {
       completedPages[state.pageIndex] = true
       return { ...state, revealProgress: 1, revealPhase: 'completed', completedPages }
     }
-    case 'START_DRAG':
-      return state.revealPhase === 'completed' ? { ...state, revealPhase: 'dragging' } : state
-    case 'END_DRAG':
-      return state.revealPhase === 'dragging' ? { ...state, revealPhase: 'completed' } : state
+    case 'START_RESONANCE':
+      return state.revealPhase === 'completed' ? { ...state, revealPhase: 'resonating' } : state
+    case 'END_RESONANCE':
+      return state.revealPhase === 'resonating' ? { ...state, revealPhase: 'completed' } : state
     case 'START_PAGE_TRANSITION':
       return state.scene === 'telescope' && state.pageIndex < 2 && state.completedPages[state.pageIndex]
         ? { ...state, revealPhase: 'transitioning' }
@@ -110,14 +125,39 @@ export function identifyUser(config: TeamConfig, input: string) {
   return others.length === 3 ? { member, others } : null
 }
 
-export function stepRevealProgress(
+export function stepPrimeProgress(
   current: number,
   deltaSeconds: number,
   holding: boolean,
-  holdDurationSeconds = 2.8,
+  thresholdSeconds = 0.8,
 ): number {
   const next = holding
-    ? current + deltaSeconds / holdDurationSeconds
-    : current - deltaSeconds / 0.9
+    ? current + deltaSeconds / thresholdSeconds
+    : current - deltaSeconds / 0.24
   return Math.min(1, Math.max(0, next))
+}
+
+function smoothStep(value: number) {
+  const clamped = Math.min(1, Math.max(0, value))
+  return clamped * clamped * (3 - 2 * clamped)
+}
+
+export function mapAssemblyProgress(elapsedSeconds: number, durationSeconds = 6.2): number {
+  if (durationSeconds <= 0 || elapsedSeconds >= durationSeconds) return 1
+  if (elapsedSeconds <= 0) return 0
+  const scale = durationSeconds / 6.2
+  const phaseOneEnd = 1.2 * scale
+  const phaseTwoEnd = 4.4 * scale
+  const phaseThreeEnd = 5.6 * scale
+
+  if (elapsedSeconds < phaseOneEnd) {
+    return smoothStep(elapsedSeconds / phaseOneEnd) * 0.15
+  }
+  if (elapsedSeconds < phaseTwoEnd) {
+    return 0.15 + smoothStep((elapsedSeconds - phaseOneEnd) / (phaseTwoEnd - phaseOneEnd)) * 0.61
+  }
+  if (elapsedSeconds < phaseThreeEnd) {
+    return 0.76 + smoothStep((elapsedSeconds - phaseTwoEnd) / (phaseThreeEnd - phaseTwoEnd)) * 0.21
+  }
+  return 0.97 + smoothStep((elapsedSeconds - phaseThreeEnd) / (durationSeconds - phaseThreeEnd)) * 0.03
 }

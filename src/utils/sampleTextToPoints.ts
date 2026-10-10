@@ -15,6 +15,58 @@ type SampleOptions = {
   alphaThreshold?: number
 }
 
+type LineGroupOptions = {
+  worldWidth: number
+  worldHeight: number
+  maxPoints: number
+  seed: string
+  mobile?: boolean
+}
+
+function stratifiedSelection(
+  candidates: Array<{ x: number; y: number; alpha: number }>,
+  maxPoints: number,
+  seed: string,
+): Array<{ x: number; y: number; alpha: number }> {
+  if (candidates.length <= maxPoints) return candidates
+  const random = seededRandom(seed)
+  const cellSize = Math.max(4, Math.round(Math.sqrt(candidates.length / maxPoints) * 3.2))
+  const buckets = new Map<string, Array<{ x: number; y: number; alpha: number }>>()
+  candidates.forEach((point) => {
+    const key = `${Math.floor(point.x / cellSize)}:${Math.floor(point.y / cellSize)}`
+    const bucket = buckets.get(key)
+    if (bucket) bucket.push(point)
+    else buckets.set(key, [point])
+  })
+  const groups = [...buckets.values()]
+  for (let index = groups.length - 1; index > 0; index -= 1) {
+    const target = Math.floor(random() * (index + 1))
+    ;[groups[index], groups[target]] = [groups[target], groups[index]]
+  }
+  groups.forEach((group) => {
+    for (let index = group.length - 1; index > 0; index -= 1) {
+      const target = Math.floor(random() * (index + 1))
+      ;[group[index], group[target]] = [group[target], group[index]]
+    }
+  })
+
+  const selected: Array<{ x: number; y: number; alpha: number }> = []
+  let round = 0
+  while (selected.length < maxPoints) {
+    let added = false
+    for (const group of groups) {
+      if (round < group.length) {
+        selected.push(group[round])
+        added = true
+        if (selected.length === maxPoints) break
+      }
+    }
+    if (!added) break
+    round += 1
+  }
+  return selected
+}
+
 export function sampleTextToPoints(text: string | string[], options: SampleOptions): Point3[] {
   const lines = (Array.isArray(text) ? text : [text]).map((line) => line.trim()).filter(Boolean)
   if (lines.length === 0 || typeof document === 'undefined') return []
@@ -59,17 +111,36 @@ export function sampleTextToPoints(text: string | string[], options: SampleOptio
   }
 
   const random = seededRandom(options.seed)
-  for (let index = candidates.length - 1; index > 0; index -= 1) {
-    const target = Math.floor(random() * (index + 1))
-    ;[candidates[index], candidates[target]] = [candidates[target], candidates[index]]
-  }
-
-  const selected = candidates.slice(0, options.maxPoints)
+  const selected = stratifiedSelection(candidates, options.maxPoints, `${options.seed}-strata`)
   return selected.map((point) => ({
     x: ((point.x / width) - 0.5) * options.worldWidth,
     y: (0.5 - point.y / height) * options.worldHeight,
     z: (random() - 0.5) * 0.055,
   }))
+}
+
+export function sampleTextLineGroups(lines: string[], options: LineGroupOptions): Point3[][] {
+  const cleanLines = lines.map((line) => line.trim()).filter(Boolean)
+  if (cleanLines.length === 0) return []
+  const weights = cleanLines.map((line) => Math.sqrt(Math.max(1, [...line].length)))
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0)
+  const lineStep = options.worldHeight / (cleanLines.length + 0.45)
+  const centerOffset = (cleanLines.length - 1) / 2
+
+  return cleanLines.map((line, index) => {
+    const isLast = index === cleanLines.length - 1
+    const widthRatio = isLast ? 0.98 : index === 0 ? 0.76 : 0.72
+    const budget = Math.max(420, Math.round(options.maxPoints * (weights[index] / totalWeight)))
+    const yOffset = (centerOffset - index) * lineStep
+    return sampleTextToPoints(line, {
+      worldWidth: options.worldWidth * widthRatio,
+      worldHeight: lineStep * 0.86,
+      maxPoints: budget,
+      seed: `${options.seed}-line-${index}`,
+      canvasHeight: 360,
+      alphaThreshold: 72,
+    }).map((point) => ({ ...point, y: point.y + yOffset }))
+  })
 }
 
 export function samplePolylineToPoints(

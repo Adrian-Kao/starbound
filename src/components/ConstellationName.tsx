@@ -2,16 +2,19 @@ import { useEffect, useState } from 'react'
 import { useThree } from '@react-three/fiber'
 import type { Point3 } from '../utils/sampleTextToPoints'
 import { sampleTextToPoints } from '../utils/sampleTextToPoints'
+import type { PointerField } from '../utils/pointerField'
 import { ParticleCloud } from './ParticleCloud'
 
 type Props = {
   text: string
   seed: string
   progressRef: React.MutableRefObject<number>
-  offsetRef: React.MutableRefObject<{ x: number; y: number }>
+  offsetRef?: React.MutableRefObject<{ x: number; y: number }>
+  pointerRef?: React.MutableRefObject<PointerField>
+  resonanceProgressRef?: React.MutableRefObject<number>
 }
 
-export function ConstellationName({ text, seed, progressRef, offsetRef }: Props) {
+export function ConstellationName({ text, seed, progressRef, offsetRef, pointerRef, resonanceProgressRef }: Props) {
   const { size } = useThree()
   const [targets, setTargets] = useState<Point3[]>([])
 
@@ -24,7 +27,7 @@ export function ConstellationName({ text, seed, progressRef, offsetRef }: Props)
       setTargets(sampleTextToPoints(text, {
         worldWidth: isMobile ? 3.5 : 3.9,
         worldHeight: isMobile ? 2.15 : 2.35,
-        maxPoints: isMobile ? 900 : 1550,
+        maxPoints: isMobile ? 1100 : 1900,
         seed: `${seed}-glyph`,
       }))
     }
@@ -39,9 +42,12 @@ export function ConstellationName({ text, seed, progressRef, offsetRef }: Props)
       seed={`${seed}-scatter`}
       progressRef={progressRef}
       offsetRef={offsetRef}
+      pointerRef={pointerRef}
+      resonanceProgressRef={resonanceProgressRef}
       scatterWidth={4.7}
       scatterHeight={4.7}
-      scale={1.08}
+      scale={1.02}
+      blending="normal"
     />
   )
 }

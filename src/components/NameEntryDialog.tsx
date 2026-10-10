@@ -33,7 +33,6 @@ export function NameEntryDialog({ onSubmit, onClose }: Props) {
         <button className="dialog-close" type="button" onClick={onClose} aria-label="關閉姓名輸入">×</button>
         <span className="eyebrow">IDENTITY ALIGNMENT</span>
         <h2 id="name-dialog-title">請輸入本名</h2>
-        <p>姓名只會在此裝置上比對，不會被傳送或儲存。</p>
         <form onSubmit={submit} noValidate>
           <label htmlFor="full-name">本名</label>
           <div className="name-field-row">

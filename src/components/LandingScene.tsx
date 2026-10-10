@@ -41,20 +41,19 @@ export function LandingScene({ webgl, entering, onActivate, onEntered, teamName 
       <header className="site-header">
         <div className="brand-mark" aria-hidden="true"><i /><i /><i /></div>
         <div>
-          <strong>STARBOUND</strong>
+          <strong>By AdrianKao</strong>
           <span>{teamName}</span>
         </div>
       </header>
 
       <section className="landing-copy">
         <span className="eyebrow">CELESTIAL RENDEZVOUS · 01</span>
-        <h1>在星海裡，<br />找到與我同行的人。</h1>
-        <p>對準夜空，讓每一道微光慢慢顯出名字。</p>
+        <h1>GDG昕力專案<br />組員揭曉</h1>
       </section>
 
       <button className="telescope-trigger" type="button" onClick={onActivate} disabled={entering}>
         <span className="trigger-orbit" aria-hidden="true" />
-        <span>{entering ? '正在穿越鏡片' : '點擊望遠鏡，尋找你的星光'}</span>
+        <span>{entering ? '正在穿越鏡片' : '點擊望遠鏡'}</span>
         <small>{webgl ? '3D OBSERVATORY' : '2D COMPATIBILITY MODE'}</small>
       </button>
       {entering && <div className="iris-transition" aria-hidden="true" />}

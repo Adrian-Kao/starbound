@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useThree } from '@react-three/fiber'
 import type { Point3 } from '../utils/sampleTextToPoints'
-import { samplePolylineToPoints, sampleTextToPoints } from '../utils/sampleTextToPoints'
+import { samplePolylineToPoints, sampleTextLineGroups } from '../utils/sampleTextToPoints'
 import { ParticleCloud } from './ParticleCloud'
 
 type Props = {
   lines: string[]
-  textProgressRef: React.MutableRefObject<number>
+  lineProgressRefs: React.MutableRefObject<number>[]
   menuProgressRef: React.MutableRefObject<number>
 }
 
-export function FinaleParticles({ lines, textProgressRef, menuProgressRef }: Props) {
+export function FinaleParticles({ lines, lineProgressRefs, menuProgressRef }: Props) {
   const { size, viewport } = useThree()
-  const [textTargets, setTextTargets] = useState<Point3[]>([])
+  const [lineTargets, setLineTargets] = useState<Point3[][]>([])
 
   useEffect(() => {
     let active = true
@@ -20,12 +20,12 @@ export function FinaleParticles({ lines, textProgressRef, menuProgressRef }: Pro
       await document.fonts?.ready
       if (!active) return
       const mobile = size.width < 700
-      setTextTargets(sampleTextToPoints(lines, {
-        worldWidth: Math.min(viewport.width * (mobile ? 0.9 : 0.72), mobile ? 4.2 : 7.4),
-        worldHeight: Math.min(viewport.height * 0.58, 4.1),
-        maxPoints: mobile ? 1600 : 2800,
+      setLineTargets(sampleTextLineGroups(lines, {
+        worldWidth: Math.min(viewport.width * (mobile ? 0.91 : 0.78), mobile ? 4.25 : 7.6),
+        worldHeight: Math.min(viewport.height * (mobile ? 0.55 : 0.53), mobile ? 3.35 : 4.25),
+        maxPoints: mobile ? 4000 : 8200,
         seed: 'closing-message-glyph',
-        lineHeight: 1.42,
+        mobile,
       }))
     }
     void create()
@@ -45,18 +45,12 @@ export function FinaleParticles({ lines, textProgressRef, menuProgressRef }: Pro
 
   return (
     <>
-      {textTargets.length > 0 && (
-        <ParticleCloud
-          targets={textTargets}
-          seed="closing-scatter"
-          progressRef={textProgressRef}
-          scatterWidth={viewport.width * 1.15}
-          scatterHeight={viewport.height * 1.15}
-          color="#bfeaff"
-          coreColor="#ffffff"
-          scale={size.width < 700 ? 1.35 : 1.55}
-        />
-      )}
+      {lineTargets.map((targets, index) => lineProgressRefs[index] && (
+        <ParticleCloud key={`${index}-${lines[index]}`} targets={targets} seed={`closing-scatter-${index}`}
+          progressRef={lineProgressRefs[index]} scatterWidth={viewport.width * 1.12}
+          scatterHeight={viewport.height * 1.08} color={index === 2 ? '#d4edff' : '#adddff'}
+          coreColor="#ffffff" scale={size.width < 700 ? 1.05 : 1.12} blending="normal" />
+      ))}
       <ParticleCloud
         targets={menuTargets}
         seed="menu-scatter"
@@ -65,7 +59,8 @@ export function FinaleParticles({ lines, textProgressRef, menuProgressRef }: Pro
         scatterHeight={2.2}
         color="#f1d6a6"
         coreColor="#ffffff"
-        scale={1.15}
+        scale={1.05}
+        blending="normal"
       />
     </>
   )
