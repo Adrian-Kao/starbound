@@ -10,9 +10,10 @@ type Props = {
   offsetRef?: React.MutableRefObject<{ x: number; y: number }>
   pointerRef?: React.MutableRefObject<PointerField>
   resonanceProgressRef?: React.MutableRefObject<number>
+  flashProgressRef?: React.MutableRefObject<number>
 }
 
-export function FallbackParticleCanvas({ text, seed, progressRef, offsetRef, pointerRef, resonanceProgressRef }: Props) {
+export function FallbackParticleCanvas({ text, seed, progressRef, offsetRef, pointerRef, resonanceProgressRef, flashProgressRef }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -37,6 +38,8 @@ export function FallbackParticleCanvas({ text, seed, progressRef, offsetRef, poi
             maxPoints: width < 700 ? 2400 : 4300,
             seed: `${seed}-fallback-lines`,
             mobile: width < 700,
+            lineWidthRatios: text.length === 4 ? [0.52, 0.93, 0.74, 0.82] : undefined,
+            lineOffsetRatios: text.length === 4 ? [0, 0, -0.12, -0.62] : undefined,
           }).flat()
         : sampleTextToPoints(text, {
             worldWidth: 3.8,
@@ -98,6 +101,7 @@ export function FallbackParticleCanvas({ text, seed, progressRef, offsetRef, poi
       const pointerX = lastWidth / 2 + (pointer?.x ?? 20) * scaleX
       const pointerY = lastHeight / 2 - (pointer?.y ?? 20) * scaleY
       const resonance = Math.max(0, Math.min(1, resonanceProgressRef?.current ?? 0))
+      const flash = Math.max(0, Math.min(1, flashProgressRef?.current ?? 0))
       targets.forEach((target, index) => {
         const start = starts[index]
         if (!start) return
@@ -120,10 +124,10 @@ export function FallbackParticleCanvas({ text, seed, progressRef, offsetRef, poi
           y += Math.cos(index * 1.19) * wave * 4
         }
         const pulse = 0.72 + Math.sin(time * 0.002 + start.phase) * 0.25
-        context.globalAlpha = pulse
-        context.fillStyle = index % 9 === 0 ? '#f1d6a6' : '#dff6ff'
+        context.globalAlpha = Math.min(1, pulse * (1 + flash * 0.72))
+        context.fillStyle = flash > 0.08 ? '#ffffff' : index % 9 === 0 ? '#f1d6a6' : '#dff6ff'
         context.beginPath()
-        context.arc(x, y, start.size * (raw > 0.98 ? 1.15 : 1), 0, Math.PI * 2)
+        context.arc(x, y, start.size * (raw > 0.98 ? 1.15 : 1) * (1 + flash * 0.58), 0, Math.PI * 2)
         context.fill()
       })
       context.globalAlpha = 1
@@ -131,7 +135,7 @@ export function FallbackParticleCanvas({ text, seed, progressRef, offsetRef, poi
     }
     animation = requestAnimationFrame(draw)
     return () => cancelAnimationFrame(animation)
-  }, [offsetRef, pointerRef, progressRef, resonanceProgressRef, seed, text])
+  }, [flashProgressRef, offsetRef, pointerRef, progressRef, resonanceProgressRef, seed, text])
 
   return <canvas ref={canvasRef} className="fallback-canvas" aria-hidden="true" />
 }

@@ -8,9 +8,10 @@ type Props = {
   lines: string[]
   lineProgressRefs: React.MutableRefObject<number>[]
   menuProgressRef: React.MutableRefObject<number>
+  flashProgressRef: React.MutableRefObject<number>
 }
 
-export function FinaleParticles({ lines, lineProgressRefs, menuProgressRef }: Props) {
+export function FinaleParticles({ lines, lineProgressRefs, menuProgressRef, flashProgressRef }: Props) {
   const { size, viewport } = useThree()
   const [lineTargets, setLineTargets] = useState<Point3[][]>([])
 
@@ -26,6 +27,8 @@ export function FinaleParticles({ lines, lineProgressRefs, menuProgressRef }: Pr
         maxPoints: mobile ? 4000 : 8200,
         seed: 'closing-message-glyph',
         mobile,
+        lineWidthRatios: lines.length === 4 ? [0.52, 0.93, 0.74, 0.82] : undefined,
+        lineOffsetRatios: lines.length === 4 ? [0, 0, -0.12, -0.62] : undefined,
       }))
     }
     void create()
@@ -48,8 +51,11 @@ export function FinaleParticles({ lines, lineProgressRefs, menuProgressRef }: Pr
       {lineTargets.map((targets, index) => lineProgressRefs[index] && (
         <ParticleCloud key={`${index}-${lines[index]}`} targets={targets} seed={`closing-scatter-${index}`}
           progressRef={lineProgressRefs[index]} scatterWidth={viewport.width * 1.12}
-          scatterHeight={viewport.height * 1.08} color={index === 2 ? '#d4edff' : '#adddff'}
-          coreColor="#ffffff" scale={size.width < 700 ? 1.05 : 1.12} blending="normal" />
+          flashProgressRef={flashProgressRef}
+          scatterHeight={viewport.height * 1.08} color={index >= 2 ? '#eefaff' : '#adddff'}
+          coreColor="#ffffff"
+          scale={index >= 2 ? (size.width < 700 ? 1.28 : 1.42) : (size.width < 700 ? 1.05 : 1.12)}
+          blending="normal" />
       ))}
       <ParticleCloud
         targets={menuTargets}

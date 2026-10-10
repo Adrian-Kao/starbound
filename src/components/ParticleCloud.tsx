@@ -17,6 +17,7 @@ const vertexShader = `
   uniform float uScale;
   uniform float uProgress;
   uniform float uResonance;
+  uniform float uFlash;
   uniform vec2 uPointer;
   uniform float uPointerStrength;
   varying float vGlow;
@@ -46,10 +47,11 @@ const vertexShader = `
 
     float pulse = 0.92 + 0.09 * sin(uTime * aTwinkle + aDelay * 8.0);
     float resonanceLight = resonanceWave * 0.32 + smoothstep(0.05, 0.8, uResonance) * 0.08;
+    float flashLight = uFlash * (1.35 + aEdge * 0.42);
     vec4 mvPosition = modelViewMatrix * vec4(transformed, 1.0);
     gl_Position = projectionMatrix * mvPosition;
-    gl_PointSize = max(1.0, aSize * uScale * (9.0 / max(2.0, -mvPosition.z)) * (1.0 + resonanceLight));
-    vGlow = pulse + resonanceLight;
+    gl_PointSize = max(1.0, aSize * uScale * (9.0 / max(2.0, -mvPosition.z)) * (1.0 + resonanceLight + uFlash * (0.9 + aEdge * 0.2)));
+    vGlow = pulse + resonanceLight + flashLight;
     vCore = aEdge;
   }
 `
@@ -58,6 +60,7 @@ const fragmentShader = `
   uniform vec3 uColor;
   uniform vec3 uCoreColor;
   uniform float uOpacity;
+  uniform float uFlash;
   varying float vGlow;
   varying float vCore;
   void main() {
@@ -67,6 +70,7 @@ const fragmentShader = `
     float halo = smoothstep(0.5, 0.18, distanceToCenter) * 0.2;
     float core = smoothstep(0.22, 0.02, distanceToCenter);
     vec3 color = mix(uColor, uCoreColor, core * (0.78 + vCore * 0.22));
+    color = mix(color, uCoreColor, uFlash * 0.82);
     float alpha = (halo + core * 0.92) * uOpacity * vGlow;
     gl_FragColor = vec4(color, alpha);
   }
@@ -79,6 +83,7 @@ type Props = {
   offsetRef?: React.MutableRefObject<{ x: number; y: number }>
   pointerRef?: React.MutableRefObject<PointerField>
   resonanceProgressRef?: React.MutableRefObject<number>
+  flashProgressRef?: React.MutableRefObject<number>
   scatterWidth?: number
   scatterHeight?: number
   color?: string
@@ -95,6 +100,7 @@ export function ParticleCloud({
   offsetRef,
   pointerRef,
   resonanceProgressRef,
+  flashProgressRef,
   scatterWidth = 5,
   scatterHeight = 5,
   color = '#8fd9ff',
@@ -155,6 +161,7 @@ export function ParticleCloud({
           uOpacity: { value: 1 },
           uProgress: { value: 0 },
           uResonance: { value: 0 },
+          uFlash: { value: 0 },
           uPointer: { value: new THREE.Vector2(20, 20) },
           uPointerStrength: { value: 0 },
           uColor: { value: new THREE.Color(color) },
@@ -176,6 +183,7 @@ export function ParticleCloud({
     material.uniforms.uTime.value = state.clock.elapsedTime
     material.uniforms.uProgress.value = THREE.MathUtils.clamp(progressRef.current, 0, 1)
     material.uniforms.uResonance.value = THREE.MathUtils.clamp(resonanceProgressRef?.current ?? 0, 0, 1)
+    material.uniforms.uFlash.value = THREE.MathUtils.clamp(flashProgressRef?.current ?? 0, 0, 1)
     const desiredX = pointerRef?.current.x ?? 20
     const desiredY = pointerRef?.current.y ?? 20
     smoothedPointer.current.x = THREE.MathUtils.damp(smoothedPointer.current.x, desiredX, 9, delta)

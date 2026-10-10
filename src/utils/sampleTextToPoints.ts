@@ -21,6 +21,8 @@ type LineGroupOptions = {
   maxPoints: number
   seed: string
   mobile?: boolean
+  lineWidthRatios?: number[]
+  lineOffsetRatios?: number[]
 }
 
 function stratifiedSelection(
@@ -120,6 +122,8 @@ export function sampleTextToPoints(text: string | string[], options: SampleOptio
 }
 
 export function sampleTextLineGroups(lines: string[], options: LineGroupOptions): Point3[][] {
+  const sampleCanvasWidth = 1200
+  const sampleCanvasHeight = 360
   const cleanLines = lines.map((line) => line.trim()).filter(Boolean)
   if (cleanLines.length === 0) return []
   const weights = cleanLines.map((line) => Math.sqrt(Math.max(1, [...line].length)))
@@ -129,15 +133,20 @@ export function sampleTextLineGroups(lines: string[], options: LineGroupOptions)
 
   return cleanLines.map((line, index) => {
     const isLast = index === cleanLines.length - 1
-    const widthRatio = isLast ? 0.98 : index === 0 ? 0.76 : 0.72
+    const widthRatio = options.lineWidthRatios?.[index] ?? (isLast ? 0.98 : index === 0 ? 0.76 : 0.72)
     const budget = Math.max(420, Math.round(options.maxPoints * (weights[index] / totalWeight)))
-    const yOffset = (centerOffset - index) * lineStep
+    const customOffset = options.lineOffsetRatios?.[index] ?? 0
+    const yOffset = (centerOffset - index + customOffset) * lineStep
+    const lineWorldWidth = options.worldWidth * widthRatio
+    // Keep the particle glyphs at the same X/Y aspect ratio as the sampling canvas.
+    const lineWorldHeight = lineWorldWidth * (sampleCanvasHeight / sampleCanvasWidth)
     return sampleTextToPoints(line, {
-      worldWidth: options.worldWidth * widthRatio,
-      worldHeight: lineStep * 0.86,
+      worldWidth: lineWorldWidth,
+      worldHeight: lineWorldHeight,
       maxPoints: budget,
       seed: `${options.seed}-line-${index}`,
-      canvasHeight: 360,
+      canvasWidth: sampleCanvasWidth,
+      canvasHeight: sampleCanvasHeight,
       alphaThreshold: 72,
     }).map((point) => ({ ...point, y: point.y + yOffset }))
   })
