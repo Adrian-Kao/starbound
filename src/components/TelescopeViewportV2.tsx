@@ -181,7 +181,7 @@ export function TelescopeViewportV2({ state, dispatch, webgl, reducedMotion }: P
     <main className="telescope-scene">
       <OuterStarfield seed={`${seed}-outer`} />
       <header className="telescope-header">
-        <span className="eyebrow">DEEP SKY OBSERVATION</span>
+        <span className="eyebrow">OBSERVATION</span>
         <strong>{String(state.pageIndex + 1).padStart(2, '0')} <i /> 03</strong>
       </header>
       <div className="lens-layout">
@@ -236,9 +236,9 @@ export function TelescopeViewportV2({ state, dispatch, webgl, reducedMotion }: P
         </button>
       </div>
       <button className="accessible-reveal" type="button" onClick={() => { progressRef.current = 1; finishReveal() }} disabled={complete || forming}>
-        {complete ? '姓名星座已完成' : forming ? '星粒正在自動排列' : '無法長按？按這裡完成聚星'}
+        {complete ? '姓名星座已完成' : forming ? '正在排列' : '無法長按？按這裡完成聚星'}
       </button>
-      <p className="sr-only" aria-live="polite">{complete ? `星星已排列出 ${member.fullName}，可點亮核心星啟動星軌共鳴` : ''}</p>
+      <p className="sr-only" aria-live="polite">{complete ? `星星已排列出 ${member.fullName}，可點亮核心星` : ''}</p>
     </main>
   )
 }

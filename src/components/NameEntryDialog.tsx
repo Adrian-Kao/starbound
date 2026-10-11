@@ -31,7 +31,7 @@ export function NameEntryDialog({ onSubmit, onClose }: Props) {
     <div className="dialog-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
       <section className="name-dialog" role="dialog" aria-modal="true" aria-labelledby="name-dialog-title">
         <button className="dialog-close" type="button" onClick={onClose} aria-label="關閉姓名輸入">×</button>
-        <span className="eyebrow">IDENTITY ALIGNMENT</span>
+        <span className="eyebrow">IDENTITY</span>
         <h2 id="name-dialog-title">請輸入本名</h2>
         <form onSubmit={submit} noValidate>
           <label htmlFor="full-name">本名</label>

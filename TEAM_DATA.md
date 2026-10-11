@@ -22,10 +22,10 @@
     "期待你們的創意!"
   ],
   "links": [
-    { "id": "line", "label": "LINE", "icon": "line", "url": "" },
-    { "id": "instagram", "label": "Instagram", "icon": "instagram", "url": "" },
-    { "id": "project", "label": "專案介紹", "icon": "project", "url": "" },
-    { "id": "github", "label": "GitHub", "icon": "github", "url": "" }
+    { "id": "line", "label": "LINE群組", "icon": "line", "url": "https://line.me/R/ti/g/mdM2ayGFCG" },
+    { "id": "instagram", "label": "我的聯繫方式", "icon": "instagram", "url": "https://www.instagram.com/adrian_kaokao?srtk=MWRxNWVyczBoZm1z" },
+    { "id": "project", "label": "工具介紹", "icon": "project", "url": "https://www.youtube.com/watch?v=5Fv58MBYYGM" },
+    { "id": "github", "label": "GitHub", "icon": "github", "url": "https://github.com/TPIsoftwareOSPO/digiRunner-Open-Source" }
   ]
 }
 ```

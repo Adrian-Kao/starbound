@@ -77,7 +77,7 @@ export function ReturnSequence({ member, webgl, reducedMotion, onComplete }: Pro
           <FallbackParticleCanvas text={member.fullName} seed="return-fallback" progressRef={progressRef} offsetRef={offsetRef} />
         )}
       </div>
-      <div className="return-caption"><span>LEAVING THE EYEPIECE</span><strong>返回完整星空</strong></div>
+      <div className="return-caption"><span>LEAVE</span><strong>返回完整星空</strong></div>
     </main>
   )
 }

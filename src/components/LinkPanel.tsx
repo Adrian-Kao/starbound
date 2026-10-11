@@ -38,7 +38,7 @@ export function LinkPanel({ links, onClose, onReset }: Props) {
           {links.map((link) => link.url ? (
             <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer">
               <span className="link-icon"><LinkIcon icon={link.icon} /></span>
-              <span><strong>{link.label}</strong><small>開啟外部座標</small></span>
+              <span><strong>{link.label}</strong></span>
               <i aria-hidden="true">↗</i>
             </a>
           ) : (
